@@ -1,6 +1,5 @@
 name: Automated Windows Build
 
-# Сборка будет запускаться при каждом обновлении кода или вручную кнопкой
 on:
   push:
     branches: [ "main", "master" ]
@@ -8,31 +7,26 @@ on:
 
 jobs:
   build-windows:
-    # Запускаем чистую Windows-машину с установленной Visual Studio
     runs-on: windows-latest
 
     steps:
-    # 1. Робот скачивает ваш код (sln, папку Project1 и все файлы)
     - name: Clone repository
       uses: actions/checkout@v4
 
-    # 2. Робот находит на сервере инструменты Visual Studio (MSBuild)
     - name: Setup MSBuild Configuration
       uses: microsoft/setup-msbuild@v2
 
-    # 3. Робот качает библиотеки и зависимости (NuGet), если они использовались в 2018 году
-    - name: Restore NuGet Packages
-      run: nuget restore *.sln
+    # Собираем напрямую файл проекта Tervylla.vcxproj в режиме Release под x64
+    - name: Compile C++ Project
+      run: msbuild Tervylla.vcxproj /p:Configuration=Release /p:Platform=x64
 
-    # 4. Самый главный шаг: Visual Studio начинает сборку проекта в режиме Release
-    - name: Compile Solution
-      run: msbuild *.sln /p:Configuration=Release /p:Platform="Any CPU"
-
-    # 5. Робот забирает готовые файлы (.exe или .dll) и упаковывает их для вас
+    # Забираем скомпилированный готовый файл .exe или .dll
     - name: Save Compiled Files
       uses: actions/upload-artifact@v4
       with:
         name: Finished-Program
         path: |
-          **/bin/Release/**/*.exe
-          **/bin/Release/**/*.dll
+          **/Release/**/*.exe
+          **/Release/**/*.dll
+          **/x64/Release/**/*.exe
+          **/x64/Release/**/*.dll
