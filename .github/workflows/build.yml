@@ -16,11 +16,10 @@ jobs:
     - name: Setup MSBuild Configuration
       uses: microsoft/setup-msbuild@v2
 
-    # Собираем напрямую файл проекта Tervylla.vcxproj в режиме Release под x64
+    # Добавляем параметр /p:WindowsTargetPlatformVersion=10.0, чтобы он взял любую доступную SDK на сервере
     - name: Compile C++ Project
-      run: msbuild Tervylla.vcxproj /p:Configuration=Release /p:Platform=x64
+      run: msbuild Tervylla.vcxproj /p:Configuration=Release /p:Platform=x64 /p:WindowsTargetPlatformVersion=10.0
 
-    # Забираем скомпилированный готовый файл .exe или .dll
     - name: Save Compiled Files
       uses: actions/upload-artifact@v4
       with:
