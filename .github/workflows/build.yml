@@ -1,6 +1,5 @@
 name: Automated Windows Build
 
-# Сборка будет запускаться при каждом обновлении кода или вручную кнопкой
 on:
   push:
     branches: [ "main", "master" ]
@@ -8,31 +7,25 @@ on:
 
 jobs:
   build-windows:
-    # Запускаем чистую Windows-машину с установленной Visual Studio
     runs-on: windows-latest
 
     steps:
-    # 1. Робот скачивает ваш код (Tervylla.vcxproj и все исходники)
     - name: Clone repository
       uses: actions/checkout@v4
 
-    # 2. Робот находит на сервере инструменты Visual Studio (MSBuild)
     - name: Setup MSBuild Configuration
       uses: microsoft/setup-msbuild@v2
 
-    # 3. Компиляция проекта строго во временную папку сборщика
-    # [ИСПРАВЛЕНО] Добавлен флаг OutputDirectory (OutDir), принудительно сохраняющий результат в корень сборки
+    # Собираем проект без принудительного изменения выходной папки, чтобы не ломать внутреннюю логику vcxproj
     - name: Compile Project
-      run: msbuild Tervylla.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0 /p:OutDir="${{ github.workspace }}/build_output/"
+      run: msbuild Tervylla.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
 
-    # 4. Робот забирает файлы из нашей фиксированной папки
-    # [ИСПРАВЛЕНО] Путь теперь намертво привязан к build_output
+    # [ИСПРАВЛЕНО] Забираем абсолютно ВСЕ файлы из папок сборки (exe, dll, lib), исключая только системный мусор .tlog
     - name: Save Compiled Files
       uses: actions/upload-artifact@v4
       with:
         name: Finished-Program
         path: |
-          build_output/*.exe
-          build_output/*.dll
-          build_output/**/*.exe
-          build_output/**/*.dll
+          **/Release/**/*
+          !**/*.tlog
+          !**/*.lastbuildstate
