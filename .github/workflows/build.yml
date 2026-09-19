@@ -16,14 +16,15 @@ jobs:
     - name: Setup MSBuild Configuration
       uses: microsoft/setup-msbuild@v2
 
+    # Собираем проект и сразу же консольной командой Windows (copy) вытаскиваем получившуюся DLL в корень репозитория
     - name: Compile Project
-      run: msbuild Tervylla.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
+      run: |
+        msbuild Tervylla.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
+        copy D:\a\ok\ok\x64\Release\Tervylla.dll Tervylla.dll
 
-    # [ИСПРАВЛЕНО] Забираем файл напрямую из папки, которую нам выдал .recipe лог
+    # [ИСПРАВЛЕНО] Забираем файл прямо из корня проекта, тут робот не сможет промахнуться
     - name: Save Compiled Files
       uses: actions/upload-artifact@v4
       with:
         name: Finished-Program
-        path: |
-          D:/a/ok/ok/x64/Release/Tervylla.dll
-          x64/Release/Tervylla.dll
+        path: Tervylla.dll
