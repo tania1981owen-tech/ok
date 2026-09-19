@@ -16,16 +16,14 @@ jobs:
     - name: Setup MSBuild Configuration
       uses: microsoft/setup-msbuild@v2
 
-    # Собираем проект без принудительного изменения выходной папки, чтобы не ломать внутреннюю логику vcxproj
     - name: Compile Project
       run: msbuild Tervylla.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
 
-    # [ИСПРАВЛЕНО] Забираем абсолютно ВСЕ файлы из папок сборки (exe, dll, lib), исключая только системный мусор .tlog
+    # [ИСПРАВЛЕНО] Забираем файл напрямую из папки, которую нам выдал .recipe лог
     - name: Save Compiled Files
       uses: actions/upload-artifact@v4
       with:
         name: Finished-Program
         path: |
-          **/Release/**/*
-          !**/*.tlog
-          !**/*.lastbuildstate
+          D:/a/ok/ok/x64/Release/Tervylla.dll
+          x64/Release/Tervylla.dll
