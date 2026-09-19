@@ -20,18 +20,21 @@ jobs:
     - name: Setup MSBuild Configuration
       uses: microsoft/setup-msbuild@v2
 
-    # 3. Компиляция проекта напрямую с принудительным переопределением набора инструментов (v143)
-    # [ИСПРАВЛЕНО] Ошибочный шаг Upgrade удален. Параметры SDK и Toolset передаются напрямую компилятору.
+    # 3. Полная чистая пересборка проекта во избежание пропуска файлов компилятором
+    # [ИСПРАВЛЕНО] Добавлен флаг /t:Rebuild для принудительной генерации бинарников
     - name: Compile Project
-      run: msbuild Tervylla.vcxproj /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
+      run: msbuild Tervylla.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
 
     # 4. Робот забирает готовые файлы (.exe или .dll) и упаковывает их для вас
+    # [ИСПРАВЛЕНО] Пути настроены строго под папки генерации из логов MSBuild
     - name: Save Compiled Files
       uses: actions/upload-artifact@v4
       with:
         name: Finished-Program
         path: |
-          **/Release/**/*.exe
-          **/Release/**/*.dll
-          x64/Release/**/*.exe
-          x64/Release/**/*.dll
+          D:/a/ok/ok/x64/Release/*.exe
+          D:/a/ok/ok/x64/Release/*.dll
+          Tervylla/x64/Release/*.exe
+          Tervylla/x64/Release/*.dll
+          **/x64/Release/*.exe
+          **/x64/Release/*.dll
