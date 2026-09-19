@@ -12,7 +12,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # 1. Робот скачивает ваш код (sln, папку Project1 и все файлы)
+    # 1. Робот скачивает ваш код (Tervylla.vcxproj и все исходники)
     - name: Clone repository
       uses: actions/checkout@v4
 
@@ -20,21 +20,16 @@ jobs:
     - name: Setup MSBuild Configuration
       uses: microsoft/setup-msbuild@v2
 
-    # 3. Робот качает библиотеки и зависимости (NuGet), если они использовались в 2018 году
-    - name: Restore NuGet Packages
-      run: nuget restore *.sln
+    # 3. [ИСПРАВЛЕНО] Автоматически обновляем сам файл проекта до актуальной версии инструментов сборки на сервере GitHub
+    - name: Retarget Project to Current Toolset
+      run: msbuild Tervylla.vcxproj /t:Upgrade
 
-    # [ИСПРАВЛЕНО] Автоматически обновляем проект до актуальной версии инструментов сборки на сервере GitHub
-    - name: Retarget Solution to Current Toolset
-      run: msbuild *.sln /t:Upgrade
-
-    # 4. Самый главный шаг: Visual Studio начинает сборку проекта в режиме Release
-    # [ИСПРАВЛЕНО] Добавлен принудительный аргумент сборки текущим компилятором
-    - name: Compile Solution
-      run: msbuild *.sln /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143
+    # 4. Самый главный шаг: Сборка конкретного vcxproj файла в режиме Release под x64
+    # [ИСПРАВЛЕНО] Убрана зависимость от отсутствующего .sln, добавлена сборка конкретного проекта
+    - name: Compile Project
+      run: msbuild Tervylla.vcxproj /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
 
     # 5. Робот забирает готовые файлы (.exe или .dll) и упаковывает их для вас
-    # [ИСПРАВЛЕНО] Расширен поиск файлов, чтобы он находил скомпилированный C++ код (он обычно падает в папки x64/Release)
     - name: Save Compiled Files
       uses: actions/upload-artifact@v4
       with:
@@ -42,5 +37,5 @@ jobs:
         path: |
           **/Release/**/*.exe
           **/Release/**/*.dll
-          **/bin/Release/**/*.exe
-          **/bin/Release/**/*.dll
+          x64/Release/**/*.exe
+          x64/Release/**/*.dll
