@@ -20,21 +20,19 @@ jobs:
     - name: Setup MSBuild Configuration
       uses: microsoft/setup-msbuild@v2
 
-    # 3. Полная чистая пересборка проекта во избежание пропуска файлов компилятором
-    # [ИСПРАВЛЕНО] Добавлен флаг /t:Rebuild для принудительной генерации бинарников
+    # 3. Компиляция проекта строго во временную папку сборщика
+    # [ИСПРАВЛЕНО] Добавлен флаг OutputDirectory (OutDir), принудительно сохраняющий результат в корень сборки
     - name: Compile Project
-      run: msbuild Tervylla.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
+      run: msbuild Tervylla.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0 /p:OutDir="${{ github.workspace }}/build_output/"
 
-    # 4. Робот забирает готовые файлы (.exe или .dll) и упаковывает их для вас
-    # [ИСПРАВЛЕНО] Пути настроены строго под папки генерации из логов MSBuild
+    # 4. Робот забирает файлы из нашей фиксированной папки
+    # [ИСПРАВЛЕНО] Путь теперь намертво привязан к build_output
     - name: Save Compiled Files
       uses: actions/upload-artifact@v4
       with:
         name: Finished-Program
         path: |
-          D:/a/ok/ok/x64/Release/*.exe
-          D:/a/ok/ok/x64/Release/*.dll
-          Tervylla/x64/Release/*.exe
-          Tervylla/x64/Release/*.dll
-          **/x64/Release/*.exe
-          **/x64/Release/*.dll
+          build_output/*.exe
+          build_output/*.dll
+          build_output/**/*.exe
+          build_output/**/*.dll
