@@ -20,16 +20,12 @@ jobs:
     - name: Setup MSBuild Configuration
       uses: microsoft/setup-msbuild@v2
 
-    # 3. [ИСПРАВЛЕНО] Автоматически обновляем сам файл проекта до актуальной версии инструментов сборки на сервере GitHub
-    - name: Retarget Project to Current Toolset
-      run: msbuild Tervylla.vcxproj /t:Upgrade
-
-    # 4. Самый главный шаг: Сборка конкретного vcxproj файла в режиме Release под x64
-    # [ИСПРАВЛЕНО] Убрана зависимость от отсутствующего .sln, добавлена сборка конкретного проекта
+    # 3. Компиляция проекта напрямую с принудительным переопределением набора инструментов (v143)
+    # [ИСПРАВЛЕНО] Ошибочный шаг Upgrade удален. Параметры SDK и Toolset передаются напрямую компилятору.
     - name: Compile Project
       run: msbuild Tervylla.vcxproj /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
 
-    # 5. Робот забирает готовые файлы (.exe или .dll) и упаковывает их для вас
+    # 4. Робот забирает готовые файлы (.exe или .dll) и упаковывает их для вас
     - name: Save Compiled Files
       uses: actions/upload-artifact@v4
       with:
