@@ -1,5 +1,6 @@
 name: Automated Windows Build
 
+# Сборка будет запускаться при каждом обновлении кода или вручную кнопкой
 on:
   push:
     branches: [ "main", "master" ]
@@ -7,19 +8,33 @@ on:
 
 jobs:
   build-windows:
+    # Запускаем чистую Windows-машину с установленной Visual Studio
     runs-on: windows-latest
 
     steps:
+    # 1. Робот скачивает ваш код (sln, папку Project1 и все файлы)
     - name: Clone repository
       uses: actions/checkout@v4
 
+    # 2. Робот находит на сервере инструменты Visual Studio (MSBuild)
     - name: Setup MSBuild Configuration
       uses: microsoft/setup-msbuild@v2
 
-    # Добавляем параметр /p:WindowsTargetPlatformVersion=10.0, чтобы он взял любую доступную SDK на сервере
-    - name: Compile C++ Project
-      run: msbuild Tervylla.vcxproj /p:Configuration=Release /p:Platform=x64 /p:WindowsTargetPlatformVersion=10.0
+    # 3. Робот качает библиотеки и зависимости (NuGet), если они использовались в 2018 году
+    - name: Restore NuGet Packages
+      run: nuget restore *.sln
 
+    # [ИСПРАВЛЕНО] Автоматически обновляем проект до актуальной версии инструментов сборки на сервере GitHub
+    - name: Retarget Solution to Current Toolset
+      run: msbuild *.sln /t:Upgrade
+
+    # 4. Самый главный шаг: Visual Studio начинает сборку проекта в режиме Release
+    # [ИСПРАВЛЕНО] Добавлен принудительный аргумент сборки текущим компилятором
+    - name: Compile Solution
+      run: msbuild *.sln /p:Configuration=Release /p:Platform="x64" /p:PlatformToolset=v143
+
+    # 5. Робот забирает готовые файлы (.exe или .dll) и упаковывает их для вас
+    # [ИСПРАВЛЕНО] Расширен поиск файлов, чтобы он находил скомпилированный C++ код (он обычно падает в папки x64/Release)
     - name: Save Compiled Files
       uses: actions/upload-artifact@v4
       with:
@@ -27,5 +42,5 @@ jobs:
         path: |
           **/Release/**/*.exe
           **/Release/**/*.dll
-          **/x64/Release/**/*.exe
-          **/x64/Release/**/*.dll
+          **/bin/Release/**/*.exe
+          **/bin/Release/**/*.dll
